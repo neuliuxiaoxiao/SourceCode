@@ -244,6 +244,7 @@ public class ArrayList<E> extends AbstractList<E>
 
         // overflow-conscious code
         if (minCapacity - elementData.length > 0)
+            //扩容
             grow(minCapacity);
     }
 
@@ -264,12 +265,16 @@ public class ArrayList<E> extends AbstractList<E>
     private void grow(int minCapacity) {
         // overflow-conscious code
         int oldCapacity = elementData.length;
+        //新容量为旧容量的1.5倍
         int newCapacity = oldCapacity + (oldCapacity >> 1);
+        //如果新容量发现比需要的容量还小，则以需要的容量为准
         if (newCapacity - minCapacity < 0)
             newCapacity = minCapacity;
+        //如果新容量已经超过最大容量了，则使用最大容量
         if (newCapacity - MAX_ARRAY_SIZE > 0)
             newCapacity = hugeCapacity(minCapacity);
         // minCapacity is usually close to size, so this is a win:
+        //以新容量拷贝出来一个新数组
         elementData = Arrays.copyOf(elementData, newCapacity);
     }
 
@@ -438,8 +443,8 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E get(int index) {
+        //检查是否越界
         rangeCheck(index);
-
         return elementData(index);
     }
 
@@ -484,12 +489,16 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public void add(int index, E element) {
+        //检查是否越界
         rangeCheckForAdd(index);
-
+        //检查是否需要扩容
         ensureCapacityInternal(size + 1);  // Increments modCount!!
+        //将index及其之后的元素往后挪一位，则index位置就空出来了
         System.arraycopy(elementData, index, elementData, index + 1,
                          size - index);
+        //将元素插入到index的位置
         elementData[index] = element;
+        //大小+1
         size++;
     }
 
@@ -503,17 +512,20 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E remove(int index) {
+        //检查越界
         rangeCheck(index);
 
         modCount++;
+        //获取index位置的元素
         E oldValue = elementData(index);
-
+        //如果index不是最后一位，则将index之后的元素往后挪一位
         int numMoved = size - index - 1;
         if (numMoved > 0)
             System.arraycopy(elementData, index+1, elementData, index,
                              numMoved);
+        //将最后一个元素删除，帮助GC
         elementData[--size] = null; // clear to let GC do its work
-
+        //返回旧值
         return oldValue;
     }
 
@@ -532,13 +544,17 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public boolean remove(Object o) {
         if (o == null) {
+            //遍历整个数组，找到元素第一次出现的位置，将其快速删除
             for (int index = 0; index < size; index++)
+                //如果要删除的元素为null，则以null进行比较，使用==
                 if (elementData[index] == null) {
                     fastRemove(index);
                     return true;
                 }
         } else {
+            //遍历整个数组，找到元素第一次出现的位置，并将其快速删除
             for (int index = 0; index < size; index++)
+                //如果要删除的元素不为null，则进行比较，使用equals方法
                 if (o.equals(elementData[index])) {
                     fastRemove(index);
                     return true;
@@ -552,11 +568,14 @@ public class ArrayList<E> extends AbstractList<E>
      * return the value removed.
      */
     private void fastRemove(int index) {
+        //少了一个越界的检查
         modCount++;
+        //如果index不是最后一位，则将index之后的元素往前挪一位
         int numMoved = size - index - 1;
         if (numMoved > 0)
             System.arraycopy(elementData, index+1, elementData, index,
                              numMoved);
+        //将最后一个元素删除，帮助GC
         elementData[--size] = null; // clear to let GC do its work
     }
 
@@ -586,13 +605,19 @@ public class ArrayList<E> extends AbstractList<E>
      * @param c collection containing elements to be added to this list
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws NullPointerException if the specified collection is null
+     * 求两个集合的交集
      */
     public boolean addAll(Collection<? extends E> c) {
+        //将集合c转为数组
         Object[] a = c.toArray();
         int numNew = a.length;
+        //检查是否需要扩容
         ensureCapacityInternal(size + numNew);  // Increments modCount
+        //将c中元素全部拷贝到数组的最后
         System.arraycopy(a, 0, elementData, size, numNew);
+        //大小增加c的大小
         size += numNew;
+        //如果c不为空就返回true，否则返回false
         return numNew != 0;
     }
 
@@ -700,7 +725,9 @@ public class ArrayList<E> extends AbstractList<E>
      * @see Collection#contains(Object)
      */
     public boolean removeAll(Collection<?> c) {
+        // 集合c不能为空
         Objects.requireNonNull(c);
+        // 同样调用批量删除方法，这时complement传入false，表示删除包含在c中的元素
         return batchRemove(c, false);
     }
 
@@ -719,24 +746,33 @@ public class ArrayList<E> extends AbstractList<E>
      * (<a href="Collection.html#optional-restrictions">optional</a>),
      *         or if the specified collection is null
      * @see Collection#contains(Object)
+     * 求两个集合的交集
      */
     public boolean retainAll(Collection<?> c) {
+        //集合c不能为null
         Objects.requireNonNull(c);
+        //调用批量删除，此时complete为true，表示删除不包含在c中的元素
         return batchRemove(c, true);
     }
 
+    //complement true-删除c中不包含的元素   false-删除c中包含的元素
     private boolean batchRemove(Collection<?> c, boolean complement) {
         final Object[] elementData = this.elementData;
+        //使用读写两个指针同时遍历数组
+        //读指针每次自增1，写指针放入元素的时候才加1，这样就不需要额外的空间，只需要在原有的数组上操作就可以了
         int r = 0, w = 0;
         boolean modified = false;
         try {
+            //遍历整个数组，如果c中包含该元素，则把该元素放到写指针的位置
             for (; r < size; r++)
                 if (c.contains(elementData[r]) == complement)
                     elementData[w++] = elementData[r];
         } finally {
             // Preserve behavioral compatibility with AbstractCollection,
             // even if c.contains() throws.
+            //正常来说r最后是等于size的，除非c.contains抛异常
             if (r != size) {
+                //如果c.contains抛异常，则把未读的元素都拷贝到写指针之后
                 System.arraycopy(elementData, r,
                                  elementData, w,
                                  size - r);
@@ -744,9 +780,11 @@ public class ArrayList<E> extends AbstractList<E>
             }
             if (w != size) {
                 // clear to let GC do its work
+                //将写指针之后的元素为空，帮助GC
                 for (int i = w; i < size; i++)
                     elementData[i] = null;
                 modCount += size - w;
+                //新大小等于写指针的位置，因为每写一次写指针就加1，所以新大小正好等于写指针的位置
                 size = w;
                 modified = true;
             }
@@ -765,17 +803,19 @@ public class ArrayList<E> extends AbstractList<E>
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException{
         // Write out element count, and any hidden stuff
+        // 防止序列化期间有修改
         int expectedModCount = modCount;
+        // 写出非transient非static属性（会写出size属性）
         s.defaultWriteObject();
-
+        // 写出元素个数
         // Write out size as capacity for behavioural compatibility with clone()
         s.writeInt(size);
-
+        // 依次写出元素
         // Write out all elements in the proper order.
         for (int i=0; i<size; i++) {
             s.writeObject(elementData[i]);
         }
-
+        // 如果有修改，抛出异常
         if (modCount != expectedModCount) {
             throw new ConcurrentModificationException();
         }
@@ -787,20 +827,25 @@ public class ArrayList<E> extends AbstractList<E>
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
+        // 声明为空数组
         elementData = EMPTY_ELEMENTDATA;
 
         // Read in size, and any hidden stuff
+        // 读入非transient非static属性（会读取size属性）
         s.defaultReadObject();
 
         // Read in capacity
+        // 读入元素个数，没什么用，只是因为写出的时候写了size属性，读的时候也要按顺序来读
         s.readInt(); // ignored
 
         if (size > 0) {
             // be like clone(), allocate array based upon size not capacity
+            //检查是否需要扩容
             ensureCapacityInternal(size);
 
             Object[] a = elementData;
             // Read in all elements in the proper order.
+            // 依次读取元素到数组中
             for (int i=0; i<size; i++) {
                 a[i] = s.readObject();
             }
