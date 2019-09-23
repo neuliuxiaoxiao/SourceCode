@@ -110,11 +110,13 @@ public class ArrayList<E> extends AbstractList<E>
 
     /**
      * Default initial capacity.
+     * 默认容量
      */
     private static final int DEFAULT_CAPACITY = 10;
 
     /**
      * Shared empty array instance used for empty instances.
+     * 空数组，如果传入的容量为0时使用
      */
     private static final Object[] EMPTY_ELEMENTDATA = {};
 
@@ -122,6 +124,7 @@ public class ArrayList<E> extends AbstractList<E>
      * Shared empty array instance used for default sized empty instances. We
      * distinguish this from EMPTY_ELEMENTDATA to know how much to inflate when
      * first element is added.
+     * 空数组，不传入容量时使用，添加第一个元素的时候会重新初始化为默认容量大小
      */
     private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
 
@@ -130,12 +133,13 @@ public class ArrayList<E> extends AbstractList<E>
      * The capacity of the ArrayList is the length of this array buffer. Any
      * empty ArrayList with elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA
      * will be expanded to DEFAULT_CAPACITY when the first element is added.
+     * 存储元素的数组
      */
     transient Object[] elementData; // non-private to simplify nested class access
 
     /**
      * The size of the ArrayList (the number of elements it contains).
-     *
+     * 集合中元素的个数
      * @serial
      */
     private int size;
@@ -149,10 +153,13 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public ArrayList(int initialCapacity) {
         if (initialCapacity > 0) {
+            //如果传入的初始容量大于0，就新建一个数组存储元素
             this.elementData = new Object[initialCapacity];
         } else if (initialCapacity == 0) {
+            //如果传入的初始容量等于0，使用空数组
             this.elementData = EMPTY_ELEMENTDATA;
         } else {
+            //如果传入的初始容量小于0，抛出异常
             throw new IllegalArgumentException("Illegal Capacity: "+
                                                initialCapacity);
         }
@@ -162,6 +169,7 @@ public class ArrayList<E> extends AbstractList<E>
      * Constructs an empty list with an initial capacity of ten.
      */
     public ArrayList() {
+        //如果没有传入初始容量，则使用空数组 使用这个数组是在添加第一个元素的时候扩容到默认大小10
         this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
     }
 
@@ -169,18 +177,21 @@ public class ArrayList<E> extends AbstractList<E>
      * Constructs a list containing the elements of the specified
      * collection, in the order they are returned by the collection's
      * iterator.
-     *
+     * 把传入集合的元素初始化到ArrayList中
      * @param c the collection whose elements are to be placed into this list
      * @throws NullPointerException if the specified collection is null
      */
     public ArrayList(Collection<? extends E> c) {
+        //集合转数组
         elementData = c.toArray();
         if ((size = elementData.length) != 0) {
+            //检查c.toArray返回的是不是Object[]类型，如果不是，重新拷贝为Object[]类型
             // c.toArray might (incorrectly) not return Object[] (see 6260652)
             if (elementData.getClass() != Object[].class)
                 elementData = Arrays.copyOf(elementData, size, Object[].class);
         } else {
             // replace with empty array.
+            //如果c为空集合，则初始化为空数组
             this.elementData = EMPTY_ELEMENTDATA;
         }
     }
@@ -220,6 +231,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     private void ensureCapacityInternal(int minCapacity) {
+        //如果是空数组，就初始化为默认大小10
         if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
             minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
         }
@@ -455,7 +467,9 @@ public class ArrayList<E> extends AbstractList<E>
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
+        //检查是否需要扩容
         ensureCapacityInternal(size + 1);  // Increments modCount!!
+        //把元素插入到最后一位
         elementData[size++] = e;
         return true;
     }
