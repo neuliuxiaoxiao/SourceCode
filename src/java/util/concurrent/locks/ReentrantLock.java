@@ -149,7 +149,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             int c = getState() - releases;
             if (Thread.currentThread() != getExclusiveOwnerThread())
                 throw new IllegalMonitorStateException();
+            // 是否完全释放锁
             boolean free = false;
+            // 其实就是重入的问题，如果c==0，也就是说没有嵌套锁了，可以释放了，否则还不能释放掉
             if (c == 0) {
                 free = true;
                 setExclusiveOwnerThread(null);
@@ -228,16 +230,26 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * Fair version of tryAcquire.  Don't grant access unless
          * recursive call or no waiters or is first.
          */
+//        尝试直接获取锁，返回值是boolean，true1代表没有线程在等待锁，2重入锁
         protected final boolean tryAcquire(int acquires) {
+//            获取当前线程
             final Thread current = Thread.currentThread();
             int c = getState();
+            //此时state==0  说明没有线程持有锁
             if (c == 0) {
+                // 虽然此时此刻锁是可以用的，但是这是公平锁，既然是公平，就得讲究先来后到，
+                // 看看有没有别人在队列中等了半天了
                 if (!hasQueuedPredecessors() &&
+                    // 如果没有线程在等待，那就用CAS尝试一下，成功了就获取到锁了，
+                    // 不成功的话，只能说明一个问题，就在刚刚几乎同一时刻有个线程抢先了 =_=
+                    // 因为刚刚还没人的，我判断过了
                     compareAndSetState(0, acquires)) {
+                    // 到这里就是获取到锁了，标记一下，告诉大家，现在是我占用了锁
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
+            // 会进入这个else if分支，说明是重入了，需要操作：state=state+1
             else if (current == getExclusiveOwnerThread()) {
                 int nextc = c + acquires;
                 if (nextc < 0)
@@ -245,6 +257,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 setState(nextc);
                 return true;
             }
+            // 如果到这里，说明前面的if和else if都没有返回true，说明没有获取到锁
+            // 回到上面一个外层调用方法继续看:
             return false;
         }
     }
@@ -254,6 +268,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * This is equivalent to using {@code ReentrantLock(false)}.
      */
     public ReentrantLock() {
+        //默认是非公平模式
         sync = new NonfairSync();
     }
 
