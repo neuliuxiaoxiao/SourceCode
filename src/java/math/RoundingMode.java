@@ -113,7 +113,7 @@ public enum RoundingMode {
          *<tr align=right><td>-1.6</td> <td>-2</td>
          *<tr align=right><td>-2.5</td> <td>-3</td>
          *<tr align=right><td>-5.5</td> <td>-6</td>
-         *</table>
+         *</table>远离零方向舍入。向绝对值最大的方向舍入，只要舍弃位非0即进位。
          */
     UP(BigDecimal.ROUND_UP),
 
@@ -137,7 +137,7 @@ public enum RoundingMode {
          *<tr align=right><td>-1.6</td> <td>-1</td>
          *<tr align=right><td>-2.5</td> <td>-2</td>
          *<tr align=right><td>-5.5</td> <td>-5</td>
-         *</table>
+         *</table>趋向零方向舍入。向绝对值最小的方向输入，所有的位都要舍弃，不存在进位情况
          */
     DOWN(BigDecimal.ROUND_DOWN),
 
@@ -162,7 +162,8 @@ public enum RoundingMode {
          *<tr align=right><td>-1.6</td> <td>-1</td>
          *<tr align=right><td>-2.5</td> <td>-2</td>
          *<tr align=right><td>-5.5</td> <td>-5</td>
-         *</table>
+         *</table>向正无穷方向舍入。向正最大方向靠拢。若是正数，舍入行为类似于ROUND_UP，若为负数，
+         * 舍入行为类似于ROUND_DOWN。Math.round()方法就是使用的此模式。
          */
     CEILING(BigDecimal.ROUND_CEILING),
 
@@ -187,7 +188,7 @@ public enum RoundingMode {
          *<tr align=right><td>-1.6</td> <td>-2</td>
          *<tr align=right><td>-2.5</td> <td>-3</td>
          *<tr align=right><td>-5.5</td> <td>-6</td>
-         *</table>
+         *</table>向负无穷方向舍入。向负无穷方向靠拢。若是正数，舍入行为类似于ROUND_DOWN；若为负数，舍入行为类似于ROUND_UP。
          */
     FLOOR(BigDecimal.ROUND_FLOOR),
 
@@ -214,7 +215,7 @@ public enum RoundingMode {
          *<tr align=right><td>-1.6</td> <td>-2</td>
          *<tr align=right><td>-2.5</td> <td>-3</td>
          *<tr align=right><td>-5.5</td> <td>-6</td>
-         *</table>
+         *</table>最近数字舍入(5进)。这是我们最经典的四舍五入。
          */
     HALF_UP(BigDecimal.ROUND_HALF_UP),
 
@@ -240,7 +241,7 @@ public enum RoundingMode {
          *<tr align=right><td>-1.6</td> <td>-2</td>
          *<tr align=right><td>-2.5</td> <td>-2</td>
          *<tr align=right><td>-5.5</td> <td>-5</td>
-         *</table>
+         *</table>最近数字舍入(5舍)。在这里5是要舍弃的。
          */
     HALF_DOWN(BigDecimal.ROUND_HALF_DOWN),
 
@@ -273,7 +274,7 @@ public enum RoundingMode {
          *<tr align=right><td>-1.6</td> <td>-2</td>
          *<tr align=right><td>-2.5</td> <td>-2</td>
          *<tr align=right><td>-5.5</td> <td>-6</td>
-         *</table>
+         *</table>银行家舍入法。
          */
     HALF_EVEN(BigDecimal.ROUND_HALF_EVEN),
 

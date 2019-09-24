@@ -91,15 +91,19 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     private static final long serialVersionUID = -817911632652898426L;
 
     /** The queued items */
+    // 使用数组存储元素
     final Object[] items;
 
     /** items index for next take, poll, peek or remove */
+    // 取元素的指针
     int takeIndex;
 
     /** items index for next put, offer, or add */
+    // 放元素的指针
     int putIndex;
 
     /** Number of elements in the queue */
+    // 元素数量
     int count;
 
     /*
@@ -108,12 +112,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
 
     /** Main lock guarding all access */
+    // 保证并发访问的锁
     final ReentrantLock lock;
 
     /** Condition for waiting takes */
+    // 非空条件
     private final Condition notEmpty;
 
     /** Condition for waiting puts */
+    // 非满条件
     private final Condition notFull;
 
     /**
@@ -158,10 +165,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // assert lock.getHoldCount() == 1;
         // assert items[putIndex] == null;
         final Object[] items = this.items;
+        // 把元素直接放在放指针的位置上
         items[putIndex] = x;
+        // 如果放指针到数组尽头了，就返回头部
         if (++putIndex == items.length)
             putIndex = 0;
+        // 数量加1
         count++;
+        // 唤醒notEmpty，因为入队了一个元素，所以肯定不为空了
         notEmpty.signal();
     }
 
@@ -174,13 +185,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // assert items[takeIndex] != null;
         final Object[] items = this.items;
         @SuppressWarnings("unchecked")
-        E x = (E) items[takeIndex];
+        // 取取指针位置的元素
+                E x = (E) items[takeIndex];
+        // 把取指针位置设为null
         items[takeIndex] = null;
+        // 取指针前移，如果数组到头了就返回数组前端循环利用
         if (++takeIndex == items.length)
             takeIndex = 0;
+        // 元素数量减1
         count--;
         if (itrs != null)
             itrs.elementDequeued();
+        // 唤醒notFull条件
         notFull.signal();
         return x;
     }
@@ -327,8 +343,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         lock.lock();
         try {
             if (count == items.length)
+                //如果数组满了就返回false
                 return false;
             else {
+//                如果数组没满就调用入队方法并返回true
                 enqueue(e);
                 return true;
             }
@@ -349,6 +367,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
+            // 如果数组满了，使用notFull等待
+            // notFull等待的意思是说现在队列满了
+            // 只有取走一个元素后，队列才不满
+            // 然后唤醒notFull，然后继续现在的逻辑
+            // 这里之所以使用while而不是if
+            // 是因为有可能多个线程阻塞在lock上
+            // 即使唤醒了可能其它线程先一步修改了队列又变成满的了
+            // 这时候需要再次等待
             while (count == items.length)
                 notFull.await();
             enqueue(e);
@@ -373,6 +399,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
+            // 如果数组满了，就阻塞nanos纳秒
+            // 如果唤醒这个线程时依然没有空间且时间到了就返回false
             while (count == items.length) {
                 if (nanos <= 0)
                     return false;
@@ -399,8 +427,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
+            // 如果队列无元素，则阻塞等待在条件notEmpty上
             while (count == 0)
                 notEmpty.await();
+            // 有元素了再出队
             return dequeue();
         } finally {
             lock.unlock();
@@ -412,6 +442,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
+            // 如果队列无元素，则阻塞等待nanos纳秒
+            // 如果下一次这个线程获得了锁但队列依然无元素且已超时就返回null
             while (count == 0) {
                 if (nanos <= 0)
                     return null;

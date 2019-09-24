@@ -1,0 +1,20 @@
+银行家舍入法：
+    舍去位的数值小于5时，直接舍去。
+    舍去位的数值大于5时，进位后舍去。
+    当舍去位的数值等于5时，若5后面还有其他非0数值，则进位后舍去，若5后面是0时，则根据5前一位数的奇偶性来判断，奇数进位，偶数舍去。
+举例：
+11.556 = 11.56    ——六入
+11.554 = 11.55    —–四舍
+11.5551 = 11.56   —–五后有数进位
+11.545 = 11.54    —–五后无数，若前位为偶数应舍去
+11.555 = 11.56    —–五后无数，若前位为奇数应进位
+
+double   f   =   111231.5585;
+BigDecimal   b   =   new   BigDecimal(f);
+double   f1   =   b.setScale(2,   RoundingMode.HALF_UP).doubleValue();
+
+java.text.DecimalFormat   df   =new   java.text.DecimalFormat(”#.00″);
+df.format(你要格式化的数字);
+
+double d = 3.1415926;
+String result = String .format(”%.2f”);

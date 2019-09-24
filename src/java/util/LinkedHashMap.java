@@ -200,18 +200,20 @@ public class LinkedHashMap<K,V>
 
     /**
      * The head (eldest) of the doubly linked list.
+     * 双向链表头结点
      */
     transient LinkedHashMap.Entry<K,V> head;
 
     /**
      * The tail (youngest) of the doubly linked list.
+     * 双向链表尾结点
      */
     transient LinkedHashMap.Entry<K,V> tail;
 
     /**
      * The iteration ordering method for this linked hash map: <tt>true</tt>
      * for access-order, <tt>false</tt> for insertion-order.
-     *
+     * 是否按访问顺序排序 true：按访问顺序存储元素，实现lru的关键  false：按插入顺序存储元素
      * @serial
      */
     final boolean accessOrder;
@@ -283,6 +285,7 @@ public class LinkedHashMap<K,V>
     void afterNodeRemoval(Node<K,V> e) { // unlink
         LinkedHashMap.Entry<K,V> p =
             (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
+        // 把节点p从双向链表中删除。
         p.before = p.after = null;
         if (b == null)
             head = a;
@@ -304,9 +307,11 @@ public class LinkedHashMap<K,V>
 
     void afterNodeAccess(Node<K,V> e) { // move node to last
         LinkedHashMap.Entry<K,V> last;
+        // 如果accessOrder为true，并且访问的节点不是尾节点
         if (accessOrder && (last = tail) != e) {
             LinkedHashMap.Entry<K,V> p =
                 (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
+            // 把p节点从双向链表中移除
             p.after = null;
             if (b == null)
                 head = a;
@@ -316,12 +321,14 @@ public class LinkedHashMap<K,V>
                 a.before = b;
             else
                 last = b;
+            // 把p节点放到双向链表的末尾
             if (last == null)
                 head = p;
             else {
                 p.before = last;
                 last.after = p;
             }
+            // 尾节点等于p
             tail = p;
             ++modCount;
         }

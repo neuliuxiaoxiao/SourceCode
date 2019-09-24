@@ -1,0 +1,44 @@
+HashSet总结：
+（1）HashSet内部使用HashMap的key存储元素，以此来保证元素不重复；
+（2）HashSet是无序的，因为HashMap的key是无序的；
+（3）HashSet中允许有一个null元素，因为HashMap允许key为null；
+（4）HashSet是非线程安全的；
+（5）HashSet是没有get()方法的；
+
+*初始化时指定容量是为了减少扩容的次数，提高效率。
+ public HashSet(Collection<? extends E> c) {
+        map = new HashMap<>(Math.max((int) (c.size()/.75f) + 1, 16));
+        addAll(c);
+    }
+
+
+LinkedHashSet总结：
+（1）LinkedHashSet的底层使用LinkedHashMap存储元素。
+（2）LinkedHashSet是有序的，它是按照插入的顺序排序的。
+ public LinkedHashMap(int initialCapacity, float loadFactor) {
+        super(initialCapacity, loadFactor);
+        accessOrder = false;
+    }
+  把accessOrder写死为false
+
+
+TreeSet总结：
+（1）TreeSet底层使用NavigableMap存储元素；
+（2）TreeSet是有序的；
+（3）TreeSet是非线程安全的；
+（4）TreeSet实现了NavigableSet接口，而NavigableSet继承自SortedSet接口；
+（5）TreeSet实现了SortedSet接口；
+
+
+CopyOnWriteArraySet总结：
+（1）CopyOnWriteArraySet是用CopyOnWriteArrayList实现的；
+（2）CopyOnWriteArraySet是有序的，因为底层其实是数组，数组是不是有序的？！
+（3）CopyOnWriteArraySet是并发安全的，而且实现了读写分离；
+（4）CopyOnWriteArraySet通过调用CopyOnWriteArrayList的addIfAbsent()方法来保证元素不重复；
+
+ConcurrentSkipListSet总结：
+（1）ConcurrentSkipListSet底层是使用ConcurrentNavigableMap实现的；
+（2）ConcurrentSkipListSet有序的，基于元素的自然排序或者通过比较器确定的顺序；
+（3）ConcurrentSkipListSet是线程安全的；
+
+

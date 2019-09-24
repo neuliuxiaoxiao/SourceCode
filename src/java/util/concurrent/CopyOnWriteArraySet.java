@@ -257,6 +257,9 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * @return {@code true} if this set did not already contain the specified
      *         element
      */
+    // 添加元素
+    // 这里是调用CopyOnWriteArrayList的addIfAbsent()方法
+    // 它会检测元素不存在的时候才添加
     public boolean add(E e) {
         return al.addIfAbsent(e);
     }

@@ -1,0 +1,25 @@
+1HashSet中使用的是Math.max((int) (c.size()/.75f) + 1, 16)
+LinkedHashSet使用Math.max(2*c.size(), 11), .75f, true)
+
+2跳表的查找方式
+
+3
+private static final Map<Integer, Integer> map = new ConcurrentHashMap<>();
+public void unsafeUpdate(Integer key, Integer value) {
+    Integer oldValue = map.get(key);
+    if (oldValue == null) {
+        map.put(key, value);
+    }
+}
+这里如果有多个线程同时调用unsafeUpdate()这个方法，ConcurrentHashMap还能保证线程安全吗？
+答案是不能。因为get()之后if之前可能有其它线程已经put()了这个元素，这时候再put()就把那个线程put()的元素覆盖了。
+那怎么修改呢？
+答案也很简单，使用putIfAbsent()方法
+
+4TreeSet和LinkedHashSet都是有序的，那它们有何不同？
+LinkedHashSet并没有实现SortedSet接口，它的有序性主要依赖于LinkedHashMap的有序性，所以它的有序性是指按照插入顺序保证的有序性；
+而TreeSet实现了SortedSet接口，它的有序性主要依赖于NavigableMap的有序性，而NavigableMap又继承自SortedMap，这个接口的有序性是
+指按照key的自然排序保证的有序性，而key的自然排序又有两种实现方式，一种是key实现Comparable接口，一种是构造方法传入Comparator比较器
+
+5TreeSet里面真的是使用TreeMap来存储元素的吗？
+TreeSet的底层不完全是使用TreeMap来实现的，更准确地说，应该是NavigableMap。

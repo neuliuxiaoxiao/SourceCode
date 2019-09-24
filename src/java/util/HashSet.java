@@ -91,16 +91,18 @@ public class HashSet<E>
     implements Set<E>, Cloneable, java.io.Serializable
 {
     static final long serialVersionUID = -5024744406713321676L;
-
+    // 内部使用HashMap
     private transient HashMap<E,Object> map;
 
     // Dummy value to associate with an Object in the backing Map
+    // 虚拟对象，用来作为value放到map中
     private static final Object PRESENT = new Object();
 
     /**
      * Constructs a new, empty set; the backing <tt>HashMap</tt> instance has
      * default initial capacity (16) and load factor (0.75).
      */
+    // 空构造方法
     public HashSet() {
         map = new HashMap<>();
     }
@@ -114,6 +116,8 @@ public class HashSet<E>
      * @param c the collection whose elements are to be placed into this set
      * @throws NullPointerException if the specified collection is null
      */
+    // 把另一个集合的元素全都添加到当前Set中
+    // 注意，这里初始化map的时候是计算了它的初始容量的
     public HashSet(Collection<? extends E> c) {
         map = new HashMap<>(Math.max((int) (c.size()/.75f) + 1, 16));
         addAll(c);
@@ -128,6 +132,7 @@ public class HashSet<E>
      * @throws     IllegalArgumentException if the initial capacity is less
      *             than zero, or if the load factor is nonpositive
      */
+    // 指定初始容量和装载因子
     public HashSet(int initialCapacity, float loadFactor) {
         map = new HashMap<>(initialCapacity, loadFactor);
     }
@@ -140,6 +145,7 @@ public class HashSet<E>
      * @throws     IllegalArgumentException if the initial capacity is less
      *             than zero
      */
+    // 只指定初始容量
     public HashSet(int initialCapacity) {
         map = new HashMap<>(initialCapacity);
     }
@@ -157,6 +163,8 @@ public class HashSet<E>
      * @throws     IllegalArgumentException if the initial capacity is less
      *             than zero, or if the load factor is nonpositive
      */
+    // LinkedHashSet专用的方法
+    // dummy是没有实际意义的, 只是为了跟上上面那个操持方法签名不同而已
     HashSet(int initialCapacity, float loadFactor, boolean dummy) {
         map = new LinkedHashMap<>(initialCapacity, loadFactor);
     }
@@ -272,17 +280,17 @@ public class HashSet<E>
      */
     private void writeObject(java.io.ObjectOutputStream s)
         throws java.io.IOException {
-        // Write out any hidden serialization magic
+        // 写出非static非transient属性
         s.defaultWriteObject();
 
-        // Write out HashMap capacity and load factor
+        // 写出map的容量和装载因子
         s.writeInt(map.capacity());
         s.writeFloat(map.loadFactor());
 
-        // Write out size
+        // 写出元素个数
         s.writeInt(map.size());
 
-        // Write out all elements in the proper order.
+        // 遍历写出所有元素
         for (E e : map.keySet())
             s.writeObject(e);
     }
@@ -293,41 +301,41 @@ public class HashSet<E>
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {
-        // Read in any hidden serialization magic
+        // 读入非static非transient属性
         s.defaultReadObject();
 
-        // Read capacity and verify non-negative.
+        // 读入容量, 并检查不能小于0
         int capacity = s.readInt();
         if (capacity < 0) {
             throw new InvalidObjectException("Illegal capacity: " +
-                                             capacity);
+                    capacity);
         }
 
-        // Read load factor and verify positive and non NaN.
+        // 读入装载因子, 并检查不能小于等于0或者是NaN(Not a Number)
+        // java.lang.Float.NaN = 0.0f / 0.0f;
         float loadFactor = s.readFloat();
         if (loadFactor <= 0 || Float.isNaN(loadFactor)) {
             throw new InvalidObjectException("Illegal load factor: " +
-                                             loadFactor);
+                    loadFactor);
         }
 
-        // Read size and verify non-negative.
+        // 读入元素个数并检查不能小于0
         int size = s.readInt();
         if (size < 0) {
             throw new InvalidObjectException("Illegal size: " +
-                                             size);
+                    size);
         }
-
-        // Set the capacity according to the size and load factor ensuring that
-        // the HashMap is at least 25% full but clamping to maximum capacity.
+        // 根据元素个数重新设置容量
+        // 这是为了保证map有足够的容量容纳所有元素, 防止无意义的扩容
         capacity = (int) Math.min(size * Math.min(1 / loadFactor, 4.0f),
                 HashMap.MAXIMUM_CAPACITY);
 
-        // Create backing HashMap
+        // 创建map, 检查是不是LinkedHashSet类型
         map = (((HashSet<?>)this) instanceof LinkedHashSet ?
-               new LinkedHashMap<E,Object>(capacity, loadFactor) :
-               new HashMap<E,Object>(capacity, loadFactor));
+                new LinkedHashMap<E,Object>(capacity, loadFactor) :
+                new HashMap<E,Object>(capacity, loadFactor));
 
-        // Read in all elements in the proper order.
+        // 读入所有元素, 并放入map中
         for (int i=0; i<size; i++) {
             @SuppressWarnings("unchecked")
                 E e = (E) s.readObject();

@@ -54,6 +54,7 @@ public class WeakReference<T> extends Reference<T> {
      * @param referent object the new weak reference will refer to
      */
     public WeakReference(T referent) {
+        // 调用Reference的构造方法初始化key和引用队列
         super(referent);
     }
 

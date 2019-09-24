@@ -582,14 +582,18 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final Node<K,V> getNode(int hash, Object key) {
         Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
+        // 如果桶的数量大于0并且待查找的key所在的桶的第一个元素不为空
         if ((tab = table) != null && (n = tab.length) > 0 &&
             (first = tab[(n - 1) & hash]) != null) {
+            // 检查第一个元素是不是要查的元素，如果是直接返回
             if (first.hash == hash && // always check first node
                 ((k = first.key) == key || (key != null && key.equals(k))))
                 return first;
             if ((e = first.next) != null) {
+                // 如果第一个元素是树节点，则按树的方式查找
                 if (first instanceof TreeNode)
                     return ((TreeNode<K,V>)first).getTreeNode(hash, key);
+                // 否则就遍历整个链表查找该元素
                 do {
                     if (e.hash == hash &&
                         ((k = e.key) == key || (key != null && key.equals(k))))
@@ -827,9 +831,14 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     final void treeifyBin(Node<K,V>[] tab, int hash) {
         int n, index; Node<K,V> e;
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
+            // 如果桶数量小于64，直接扩容而不用树化
+            // 因为扩容之后，链表会分化成两个链表，达到减少元素的作用
+            // 当然也不一定，比如容量为4，里面存的全是除以4余数等于3的元素
+            // 这样即使扩容也无法减少链表的长度
             resize();
         else if ((e = tab[index = (n - 1) & hash]) != null) {
             TreeNode<K,V> hd = null, tl = null;
+            // 把所有节点换成树节点
             do {
                 TreeNode<K,V> p = replacementTreeNode(e, null);
                 if (tl == null)
@@ -840,6 +849,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 }
                 tl = p;
             } while ((e = e.next) != null);
+            // 如果进入过上面的循环，则从头节点开始树化
             if ((tab[index] = hd) != null)
                 hd.treeify(tab);
         }
@@ -885,16 +895,20 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     final Node<K,V> removeNode(int hash, Object key, Object value,
                                boolean matchValue, boolean movable) {
         Node<K,V>[] tab; Node<K,V> p; int n, index;
+        // 如果桶的数量大于0且待删除的元素所在的桶的第一个元素不为空
         if ((tab = table) != null && (n = tab.length) > 0 &&
             (p = tab[index = (n - 1) & hash]) != null) {
             Node<K,V> node = null, e; K k; V v;
             if (p.hash == hash &&
                 ((k = p.key) == key || (key != null && key.equals(k))))
+                // 如果第一个元素正好就是要找的元素，赋值给node变量后续删除使用
                 node = p;
             else if ((e = p.next) != null) {
                 if (p instanceof TreeNode)
+                    // 如果第一个元素是树节点，则以树的方式查找节点
                     node = ((TreeNode<K,V>)p).getTreeNode(hash, key);
                 else {
+                    // 否则遍历整个链表查找元素
                     do {
                         if (e.hash == hash &&
                             ((k = e.key) == key ||
@@ -906,16 +920,21 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     } while ((e = e.next) != null);
                 }
             }
+            // 如果找到了元素，则看参数是否需要匹配value值，如果不需要匹配直接删除，如果需要匹配则看value值是否与传入的value相等
             if (node != null && (!matchValue || (v = node.value) == value ||
                                  (value != null && value.equals(v)))) {
                 if (node instanceof TreeNode)
+                    // 如果是树节点，调用树的删除方法（以node调用的，是删除自己）
                     ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
                 else if (node == p)
+                    // 如果待删除的元素是第一个元素，则把第二个元素移到第一的位置
                     tab[index] = node.next;
                 else
+                    // 否则删除node节点
                     p.next = node.next;
                 ++modCount;
                 --size;
+                // 删除节点后置处理
                 afterNodeRemoval(node);
                 return node;
             }
@@ -1919,22 +1938,30 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 int ph, dir; K pk;
                 TreeNode<K,V> pl = p.left, pr = p.right, q;
                 if ((ph = p.hash) > h)
+                    // 左子树
                     p = pl;
                 else if (ph < h)
+                    // 右子树
                     p = pr;
                 else if ((pk = p.key) == k || (k != null && k.equals(pk)))
+                    // 找到了直接返回
                     return p;
                 else if (pl == null)
+                    // hash相同但key不同，左子树为空查右子树
                     p = pr;
                 else if (pr == null)
+                    // 右子树为空查左子树
                     p = pl;
                 else if ((kc != null ||
                           (kc = comparableClassFor(k)) != null) &&
                          (dir = compareComparables(kc, k, pk)) != 0)
+                    // 通过compare方法比较key值的大小决定使用左子树还是右子树
                     p = (dir < 0) ? pl : pr;
                 else if ((q = pr.find(h, k, kc)) != null)
+                    // 如果以上条件都不通过，则尝试在右子树查找
                     return q;
                 else
+                    // 都没找到就在左子树查找
                     p = pl;
             } while (p != null);
             return null;
@@ -1944,6 +1971,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          * Calls find for root node.
          */
         final TreeNode<K,V> getTreeNode(int h, Object k) {
+            // 从树的根节点开始查找
             return ((parent != null) ? root() : this).find(h, k, null);
         }
 
@@ -1973,6 +2001,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             for (TreeNode<K,V> x = this, next; x != null; x = next) {
                 next = (TreeNode<K,V>)x.next;
                 x.left = x.right = null;
+                // 第一个元素作为根节点且为黑节点，其它元素依次插入到树中再做平衡
                 if (root == null) {
                     x.parent = null;
                     x.red = false;
@@ -1982,6 +2011,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     K k = x.key;
                     int h = x.hash;
                     Class<?> kc = null;
+                    // 从根节点查找元素插入的位置
                     for (TreeNode<K,V> p = root;;) {
                         int dir, ph;
                         K pk = p.key;
@@ -1993,7 +2023,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                                   (kc = comparableClassFor(k)) == null) ||
                                  (dir = compareComparables(kc, k, pk)) == 0)
                             dir = tieBreakOrder(k, pk);
-
+                        // 如果最后没找到元素，则插入
                         TreeNode<K,V> xp = p;
                         if ((p = (dir <= 0) ? p.left : p.right) == null) {
                             x.parent = xp;
@@ -2001,12 +2031,14 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                                 xp.left = x;
                             else
                                 xp.right = x;
+                            // 插入后平衡，默认插入的是红节点，在balanceInsertion()方法里
                             root = balanceInsertion(root, x);
                             break;
                         }
                     }
                 }
             }
+            // 把根节点移动到链表的头节点，因为经过平衡之后原来的第一个元素不一定是根节点了
             moveRootToFront(tab, root);
         }
 
@@ -2033,33 +2065,51 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
                                        int h, K k, V v) {
             Class<?> kc = null;
+            //标记是否找到这个key 的节点
             boolean searched = false;
+//            找到树的根节点
             TreeNode<K,V> root = (parent != null) ? root() : this;
+//            从树的根节点开始遍历
             for (TreeNode<K,V> p = root;;) {
+//                dir=direction，标记是在左边还是右边
+//                ph=p.hash 当前节点的hash值
+//                pk当前节点的key值
                 int dir, ph; K pk;
                 if ((ph = p.hash) > h)
+//                    当前hash值比目标hash大，说明在左边
                     dir = -1;
                 else if (ph < h)
+//                    当前hash比目标hash小，说明在右边
                     dir = 1;
                 else if ((pk = p.key) == k || (k != null && k.equals(pk)))
+//                    两者hash相同且key相等，说明找到了节点，直接返回改节点，回到putval中判断是否需要修改其value值
                     return p;
                 else if ((kc == null &&
+//                        如果k是comparable的子类则返回其真实的类，否则返回null
                           (kc = comparableClassFor(k)) == null) ||
+//                        如果k和pk不是同样的类型则返回0，否则返回两者比较的结果
                          (dir = compareComparables(kc, k, pk)) == 0) {
+                    // 这个条件表示两者hash相同但是其中一个不是Comparable类型或者两者类型不同
+                    // 比如key是Object类型，这时可以传String也可以传Integer，两者hash值可能相同
+                    // 在红黑树中把同样hash值的元素存储在同一颗子树，这里相当于找到了这颗子树的顶点
+                    // 从这个顶点分别遍历其左右子树去寻找有没有跟待插入的key相同的元素
                     if (!searched) {
                         TreeNode<K,V> q, ch;
                         searched = true;
+                        // 遍历左右子树找到了直接返回
                         if (((ch = p.left) != null &&
                              (q = ch.find(h, k, kc)) != null) ||
                             ((ch = p.right) != null &&
                              (q = ch.find(h, k, kc)) != null))
                             return q;
                     }
+                    // 如果两者类型相同，再根据它们的内存地址计算hash值进行比较
                     dir = tieBreakOrder(k, pk);
                 }
 
                 TreeNode<K,V> xp = p;
                 if ((p = (dir <= 0) ? p.left : p.right) == null) {
+                    // 如果最后确实没找到对应key的元素，则新建一个节点
                     Node<K,V> xpn = xp.next;
                     TreeNode<K,V> x = map.newTreeNode(h, k, v, xpn);
                     if (dir <= 0)
@@ -2070,6 +2120,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     x.parent = x.prev = xp;
                     if (xpn != null)
                         ((TreeNode<K,V>)xpn).prev = x;
+                    // 插入树节点后平衡
+                    // 把root节点移动到链表的第一个节点
                     moveRootToFront(tab, balanceInsertion(root, x));
                     return null;
                 }
@@ -2089,26 +2141,40 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
                                   boolean movable) {
             int n;
+            // 如果桶的数量为0直接返回
             if (tab == null || (n = tab.length) == 0)
                 return;
+            // 节点在桶中的索引
             int index = (n - 1) & hash;
+            // 第一个节点，根节点，根左子节点
             TreeNode<K,V> first = (TreeNode<K,V>)tab[index], root = first, rl;
+            // 后继节点，前置节点
             TreeNode<K,V> succ = (TreeNode<K,V>)next, pred = prev;
             if (pred == null)
+                // 如果前置节点为空，说明当前节点是根节点，则把后继节点赋值到第一个节点的位置，相当于删除了当前节点
                 tab[index] = first = succ;
             else
+                // 否则把前置节点的下个节点设置为当前节点的后继节点，相当于删除了当前节点
                 pred.next = succ;
+            // 如果后继节点不为空，则让后继节点的前置节点指向当前节点的前置节点，相当于删除了当前节点
             if (succ != null)
                 succ.prev = pred;
+            // 如果第一个节点为空，说明没有后继节点了，直接返回
             if (first == null)
                 return;
+            // 如果根节点的父节点不为空，则重新查找父节点
             if (root.parent != null)
                 root = root.root();
+            // 如果根节点为空，则需要反树化（将树转化为链表）
+            // 如果需要移动节点且树的高度比较小，则需要反树化
             if (root == null || root.right == null ||
                 (rl = root.left) == null || rl.left == null) {
                 tab[index] = first.untreeify(map);  // too small
                 return;
             }
+            // 分割线，以上都是删除链表中的节点，下面才是直接删除红黑树的节点（因为TreeNode本身即是链表节点又是树节点）
+
+            // 删除红黑树节点的大致过程是寻找右子树中最小的节点放到删除节点的位置，然后做平衡，此处不过多注释
             TreeNode<K,V> p = this, pl = left, pr = right, replacement;
             if (pl != null && pr != null) {
                 TreeNode<K,V> s = pr, sl;

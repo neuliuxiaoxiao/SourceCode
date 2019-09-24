@@ -88,21 +88,27 @@ package java.util;
  * @see     TreeMap
  * @since   1.2
  */
-
+// TreeSet实现了NavigableSet接口，所以它是有序的
 public class TreeSet<E> extends AbstractSet<E>
     implements NavigableSet<E>, Cloneable, java.io.Serializable
 {
     /**
      * The backing map.
      */
+    // 元素存储在NavigableMap中
+    // 注意它不一定就是TreeMap
     private transient NavigableMap<E,Object> m;
 
     // Dummy value to associate with an Object in the backing Map
+    // 虚拟元素, 用来作为value存储在map中
     private static final Object PRESENT = new Object();
 
     /**
      * Constructs a set backed by the specified navigable map.
      */
+    // 直接使用传进来的NavigableMap存储元素
+    // 这里不是深拷贝,如果外面的map有增删元素也会反映到这里
+    // 而且, 这个方法不是public的, 说明只能给同包使用
     TreeSet(NavigableMap<E,Object> m) {
         this.m = m;
     }
@@ -120,6 +126,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * integers), the {@code add} call will throw a
      * {@code ClassCastException}.
      */
+    // 使用TreeMap初始化
     public TreeSet() {
         this(new TreeMap<E,Object>());
     }
@@ -137,6 +144,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *        If {@code null}, the {@linkplain Comparable natural
      *        ordering} of the elements will be used.
      */
+    // 使用带comparator的TreeMap初始化
     public TreeSet(Comparator<? super E> comparator) {
         this(new TreeMap<>(comparator));
     }
@@ -155,6 +163,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         not {@link Comparable}, or are not mutually comparable
      * @throws NullPointerException if the specified collection is null
      */
+    // 将集合c中的所有元素添加的TreeSet中
     public TreeSet(Collection<? extends E> c) {
         this();
         addAll(c);
@@ -167,6 +176,7 @@ public class TreeSet<E> extends AbstractSet<E>
      * @param s sorted set whose elements will comprise the new set
      * @throws NullPointerException if the specified sorted set is null
      */
+    // 将SortedSet中的所有元素添加到TreeSet中
     public TreeSet(SortedSet<E> s) {
         this(s.comparator());
         addAll(s);
@@ -194,6 +204,7 @@ public class TreeSet<E> extends AbstractSet<E>
     /**
      * @since 1.6
      */
+    // 以逆序返回一个新的TreeSet
     public NavigableSet<E> descendingSet() {
         return new TreeSet<>(m.descendingMap());
     }
@@ -251,6 +262,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
      */
+    // 添加元素, 调用map的put()方法, value为PRESENT
     public boolean add(E e) {
         return m.put(e, PRESENT)==null;
     }
@@ -295,8 +307,10 @@ public class TreeSet<E> extends AbstractSet<E>
      *         if any element is null and this set uses natural ordering, or
      *         its comparator does not permit null elements
      */
+    // 添加集合c中的所有元素
     public  boolean addAll(Collection<? extends E> c) {
         // Use linear-time version if applicable
+        // 满足一定条件时直接调用TreeMap的addAllForTreeSet()方法添加元素
         if (m.size()==0 && c.size() > 0 &&
             c instanceof SortedSet &&
             m instanceof TreeMap) {
@@ -309,6 +323,7 @@ public class TreeSet<E> extends AbstractSet<E>
                 return true;
             }
         }
+        // 不满足上述条件, 调用父类的addAll()通过遍历的方式一个一个地添加元素
         return super.addAll(c);
     }
 
